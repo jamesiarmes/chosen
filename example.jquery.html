@@ -1330,11 +1330,11 @@
     $(".chzn-select-deselect").chosen({allow_single_deselect:true}); 
     
     $(".chzn-select-template-example").chosen({
-      template: function (option, searched_text) {
+      template: function (template_data, value) {
         return [
-          "<span style='float: right'>User Rating: " + option.template_data.user_rating + "</span>",
-          "<div>" + (searched_text ? searched_text : option.text) + "</div>",
-          "<div><i>type of candy: " + option.template_data.type + "</i></div>"         
+          "<span style='float: right'>User Rating: " + template_data.user_rating + "</span>",
+          "<div>" + value + "</div>",
+          "<div><i>type of candy: " + template_data.type + "</i></div>"         
         ].join("");
       }
     });
