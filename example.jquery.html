@@ -1330,10 +1330,10 @@
     $(".chzn-select-deselect").chosen({allow_single_deselect:true}); 
     
     $(".chzn-select-template-example").chosen({
-      template: function (template_data, value) {
+      template: function (text, template_data) {
         return [
-          "<span style='float: right'>User Rating: " + template_data.user_rating + "</span>",
-          "<div>" + value + "</div>",
+          "<span style='float: right'>User Rating: " + template_data.userRating + "</span>",
+          "<div>" + text + "</div>",
           "<div><i>type of candy: " + template_data.type + "</i></div>"         
         ].join("");
       }

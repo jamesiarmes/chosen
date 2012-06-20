@@ -1344,10 +1344,10 @@
     for (_i = 0, _len = deselects.length; _i < _len; _i++) {
       select = select_with_template[_i];
       _results.push(new Chosen(select,{
-        template: function (template_data, value) {
+        template: function (text, template_data) {
           return [
-            "<span style='float: right'>User Rating: " + template_data.user_rating + "</span>",
-            "<div>" + value + "</div>",
+            "<span style='float: right'>User Rating: " + template_data.userRating + "</span>",
+            "<div>" + text + "</div>",
             "<div><i>type of candy: " + template_data.type + "</i></div>"         
           ].join("");
         }
