@@ -1294,6 +1294,21 @@
         </select>
       </div>
     </div>
+
+    <h2>Template Support</h2>
+    <div class="side-by-side clearfix">
+      <p>Chosen supports templating select boxes too.</p>
+      <div>
+        <select data-placeholder="Choose your favorite candy..." class="chzn-select-template-example" style="width:350px;" tabindex="11">
+          <option value=""></option>
+          <option data-type="chocolate" data-user-rating="1.8">M&Ms</option>
+          <option data-type="fruity" data-user-rating="1">Starburst</option>
+          <option data-type="fruity" data-user-rating="7">Skittles</option>
+          <option data-type="chocolate" data-user-rating="9">Reese's</option>
+          <option data-type="chocolate" data-user-rating="10">Snickers</option>
+        </select>
+      </div>
+    </div>
         
     <h2>Change / Update Events</h2>
     <div class="side-by-side clearfix">
@@ -1343,6 +1358,19 @@
       select = deselects[_i];
       _results.push(new Chosen(select,{allow_single_deselect:true}));
     }
+    select_with_template = $$(".chzn-select-template-example");
+    for (_i = 0, _len = deselects.length; _i < _len; _i++) {
+      select = select_with_template[_i];
+      _results.push(new Chosen(select,{
+        template: function (text, templateData) {
+          return [
+            "<span style='float: right'>User Rating: " + templateData.userRating + "</span>",
+            "<div>" + text + "</div>",
+            "<div><i>type of candy: " + templateData.type + "</i></div>"         
+          ].join("");
+        }
+      }));
+    }    
     return _results;
   });
   </script>
