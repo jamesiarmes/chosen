@@ -374,7 +374,7 @@
     };
 
     Chosen.prototype.set_up_html = function() {
-      var container_classes, container_props;
+      var container_classes, container_props, first_select_element;
       this.container_id = this.form_field.id.length ? this.form_field.id.replace(/[^\w]/g, '_') : this.generate_field_id();
       this.container_id += "_chzn";
       container_classes = ["chzn-container"];
@@ -413,23 +413,21 @@
       this.results_build();
       this.set_tab_index();
       this.set_label_behavior();
-
-      var first_select_element = this.container.find('.active-result').first();
+      first_select_element = this.container.find('.active-result').first();
       this.optionNoHoverCSS = {
         'background-color': first_select_element.css('background-color'),
         'color': first_select_element.css('color'),
         'background-image': first_select_element.css('background-image'),
-        'filter': first_select_element.css('filter'),
+        'filter': first_select_element.css('filter')
       };
       first_select_element.addClass('highlighted');
       this.optionHoverCSS = {
         'background-color': first_select_element.css('background-color'),
         'color': first_select_element.css('color'),
         'background-image': first_select_element.css('background-image'),
-        'filter': first_select_element.css('filter'),
+        'filter': first_select_element.css('filter')
       };
       first_select_element.removeClass('highlighted');
-
       return this.form_field_jq.trigger("liszt:ready", {
         chosen: this
       });
@@ -628,12 +626,12 @@
       if (el.length) {
         this.result_clear_highlight();
         this.result_highlight = el;
+        this.result_highlight.css(this.optionHoverCSS);
         maxHeight = parseInt(this.search_results.css("maxHeight"), 10);
         visible_top = this.search_results.scrollTop();
         visible_bottom = maxHeight + visible_top;
         high_top = this.result_highlight.position().top + this.search_results.scrollTop();
         high_bottom = high_top + this.result_highlight.outerHeight();
-        this.result_highlight.css(this.optionHoverCSS);
         if (high_bottom >= visible_bottom) {
           return this.search_results.scrollTop((high_bottom - maxHeight) > 0 ? high_bottom - maxHeight : 0);
         } else if (high_top < visible_top) {
