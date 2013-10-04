@@ -63,6 +63,23 @@ class Chosen extends AbstractChosen
     this.results_build()
     this.set_tab_index()
     this.set_label_behavior()
+
+    first_select_element = this.container.find('.active-result').first();
+    this.optionNoHoverCSS = {
+      'background-color': first_select_element.css('background-color'),
+      'color': first_select_element.css('color'),
+      'background-image': first_select_element.css('background-image'),
+      'filter': first_select_element.css('filter'),
+    };
+    first_select_element.addClass('highlighted');
+    this.optionHoverCSS = {
+      'background-color': first_select_element.css('background-color'),
+      'color': first_select_element.css('color'),
+      'background-image': first_select_element.css('background-image'),
+      'filter': first_select_element.css('filter'),
+    };
+    first_select_element.removeClass('highlighted');
+
     @form_field_jq.trigger("liszt:ready", {chosen: this})
 
   register_observers: ->
@@ -137,17 +154,14 @@ class Chosen extends AbstractChosen
     @active_field = false
     this.results_hide()
 
-    @container.removeClass "chzn-container-active"
     this.clear_backstroke()
 
     this.show_search_field_default()
     this.search_field_scale()
 
   activate_field: ->
-    @container.addClass "chzn-container-active"
     @active_field = true
 
-    @search_field.val(@search_field.val())
     @search_field.focus()
 
 
@@ -200,7 +214,7 @@ class Chosen extends AbstractChosen
       this.result_clear_highlight()
 
       @result_highlight = el
-      @result_highlight.addClass "highlighted"
+      @result_highlight.css(this.optionHoverCSS)
 
       maxHeight = parseInt @search_results.css("maxHeight"), 10
       visible_top = @search_results.scrollTop()
@@ -215,7 +229,7 @@ class Chosen extends AbstractChosen
         @search_results.scrollTop high_top
 
   result_clear_highlight: ->
-    @result_highlight.removeClass "highlighted" if @result_highlight
+    @result_highlight.css(this.optionNoHoverCSS) if @result_highlight
     @result_highlight = null
 
   results_show: ->
@@ -223,7 +237,7 @@ class Chosen extends AbstractChosen
       @form_field_jq.trigger("liszt:maxselected", {chosen: this})
       return false
 
-    @container.addClass "chzn-with-drop"
+    @container.find('.chzn-drop').css('left', 0)
     @form_field_jq.trigger("liszt:showing_dropdown", {chosen: this})
 
     @results_showing = true
@@ -237,7 +251,7 @@ class Chosen extends AbstractChosen
     if @results_showing
       this.result_clear_highlight()
 
-      @container.removeClass "chzn-with-drop"
+      @container.find('.chzn-drop').css('left', -9999)
       @form_field_jq.trigger("liszt:hiding_dropdown", {chosen: this})
 
     @results_showing = false
