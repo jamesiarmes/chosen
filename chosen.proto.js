@@ -87,6 +87,27 @@
     return parser.parsed;
   };
 
+  SelectParser.ajax_results_to_array = function(select) {
+    var child, node, parser, _i, _len;
+    parser = new SelectParser();
+    for (_i = 0, _len = select.length; _i < _len; _i++) {
+      child = select[_i];
+      node = {
+        nodeName: "OPTION",
+        value: child.id,
+        text: child.text,
+        innerHTML: child.text,
+        selected: false,
+        className: '',
+        style: {
+          cssText: ''
+        }
+      };
+      parser.add_node(node, null, false);
+    }
+    return parser.parsed;
+  };
+
   this.SelectParser = SelectParser;
 
 }).call(this);
