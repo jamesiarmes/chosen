@@ -60,7 +60,7 @@ class Chosen extends AbstractChosen
       @search_container = @container.find('div.chzn-search').first()
       @selected_item = @container.find('.chzn-single').first()
     
-    this.results_build()
+    this.results_build(true)
     this.set_tab_index()
     this.set_label_behavior()
 
@@ -171,20 +171,21 @@ class Chosen extends AbstractChosen
     else
       this.close_field()
 
-  results_build: ->
+  results_build: (init = false) ->
     @parsing = true
     @selected_option_count = null
 
-    @results_data = root.SelectParser.select_to_array @form_field
+    if (!@options.autocomplete_path || init)
+      @results_data = root.SelectParser.select_to_array @form_field
 
-    if @is_multiple and this.choices_count() > 0
-      @search_choices.find("li.search-choice").remove()
-    else if not @is_multiple
-      @selected_item.addClass("chzn-default").find("span").text(@default_text)
-      if @disable_search or @form_field.options.length <= @disable_search_threshold
-        @container.addClass "chzn-container-single-nosearch"
-      else
-        @container.removeClass "chzn-container-single-nosearch"
+      if @is_multiple and this.choices_count() > 0
+        @search_choices.find("li.search-choice").remove()
+      else if not @is_multiple
+        @selected_item.addClass("chzn-default").find("span").text(@default_text)
+        if @disable_search or @form_field.options.length <= @disable_search_threshold
+          @container.addClass "chzn-container-single-nosearch"
+        else
+          @container.removeClass "chzn-container-single-nosearch"
 
     content = ''
     for data in @results_data
@@ -199,7 +200,8 @@ class Chosen extends AbstractChosen
           this.single_deselect_control_build() if @allow_single_deselect
 
     this.search_field_disabled()
-    this.show_search_field_default()
+    if !@options.autocomplete_path
+      this.show_search_field_default()
     this.search_field_scale()
 
     @search_results.html content
@@ -233,6 +235,24 @@ class Chosen extends AbstractChosen
     @result_highlight = null
 
   results_show: ->
+    if @options.autocomplete_path
+      if @autocomplete_timer?
+        clearTimeout(@autocomplete_timer)
+      container = @
+      @autocomplete_timer = setTimeout(
+        () ->
+          if container.search_field.val().length > 0
+           container.results_show_now()
+        1000
+      )
+    else
+      @results_show_now();
+
+  results_show_now: ->
+    if (@options.autocomplete_path && @search_field.val().length == 0)
+      @results_hide();
+      return;
+
     if @is_multiple and @max_selected_options <= this.choices_count()
       @form_field_jq.trigger("liszt:maxselected", {chosen: this})
       return false
@@ -357,8 +377,18 @@ class Chosen extends AbstractChosen
       position = high_id.substr(high_id.lastIndexOf("_") + 1 )
       item = @results_data[position]
       item.selected = true
+      option = $(@form_field).find('option[value="' + item.value + '"]')
 
-      @form_field.options[item.options_index].selected = true
+      if @options.autocomplete_path && option.length == 0
+        $(this.form_field).append('<option value="' + item.value + '" selected="selected">' + item.text + '</option>')
+
+      else if option.selected()?
+        @results_hide()
+        return
+
+      else
+        option.attr('selected', 'selected')
+
       @selected_option_count = null
 
       if @is_multiple
@@ -371,7 +401,7 @@ class Chosen extends AbstractChosen
 
       @search_field.val ""
 
-      @form_field_jq.trigger "change", {'selected': @form_field.options[item.options_index].value} if @is_multiple || @form_field.selectedIndex != @current_selectedIndex
+      @form_field_jq.trigger "change", {'selected': if @options.autocomplete_path then item.value else @form_field.options[item.options_index].value} if @is_multiple || @form_field.selectedIndex != @current_selectedIndex
       @current_selectedIndex = @form_field.selectedIndex
       this.search_field_scale()
 
@@ -414,6 +444,25 @@ class Chosen extends AbstractChosen
     @selected_item.addClass("chzn-single-with-deselect")
 
   winnow_results: ->
+    if @.options.autocomplete_path
+      this.winnow_results_remote()
+    else
+      this.winnow_results_local()
+
+  winnow_results_remote: ->
+    @search_results.html('Loading...');
+    container = @
+    $.ajax({
+      url : this.options.autocomplete_path,
+      type : 'POST',
+      data : { search : @search_field.val() },
+      success : (data) ->
+        container.results_data = root.SelectParser.ajax_results_to_array(data.results)
+        container.results_update_field()
+        container.winnow_results_local()
+    })
+
+  winnow_results_local: ->
     this.no_results_clear()
 
     results = 0

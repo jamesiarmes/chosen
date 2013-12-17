@@ -87,6 +87,27 @@
     return parser.parsed;
   };
 
+  SelectParser.ajax_results_to_array = function(select) {
+    var child, node, parser, _i, _len;
+    parser = new SelectParser();
+    for (_i = 0, _len = select.length; _i < _len; _i++) {
+      child = select[_i];
+      node = {
+        nodeName: "OPTION",
+        value: child.id,
+        text: child.text,
+        innerHTML: child.text,
+        selected: false,
+        className: '',
+        style: {
+          cssText: ''
+        }
+      };
+      parser.add_node(node, null, false);
+    }
+    return parser.parsed;
+  };
+
   this.SelectParser = SelectParser;
 
 }).call(this);
@@ -410,7 +431,7 @@
         this.search_container = this.container.find('div.chzn-search').first();
         this.selected_item = this.container.find('.chzn-single').first();
       }
-      this.results_build();
+      this.results_build(true);
       this.set_tab_index();
       this.set_label_behavior();
       first_select_element = this.container.find('.active-result').first();
@@ -576,19 +597,24 @@
       }
     };
 
-    Chosen.prototype.results_build = function() {
+    Chosen.prototype.results_build = function(init) {
       var content, data, _i, _len, _ref1;
+      if (init == null) {
+        init = false;
+      }
       this.parsing = true;
       this.selected_option_count = null;
-      this.results_data = root.SelectParser.select_to_array(this.form_field);
-      if (this.is_multiple && this.choices_count() > 0) {
-        this.search_choices.find("li.search-choice").remove();
-      } else if (!this.is_multiple) {
-        this.selected_item.addClass("chzn-default").find("span").text(this.default_text);
-        if (this.disable_search || this.form_field.options.length <= this.disable_search_threshold) {
-          this.container.addClass("chzn-container-single-nosearch");
-        } else {
-          this.container.removeClass("chzn-container-single-nosearch");
+      if (!this.options.autocomplete_path || init) {
+        this.results_data = root.SelectParser.select_to_array(this.form_field);
+        if (this.is_multiple && this.choices_count() > 0) {
+          this.search_choices.find("li.search-choice").remove();
+        } else if (!this.is_multiple) {
+          this.selected_item.addClass("chzn-default").find("span").text(this.default_text);
+          if (this.disable_search || this.form_field.options.length <= this.disable_search_threshold) {
+            this.container.addClass("chzn-container-single-nosearch");
+          } else {
+            this.container.removeClass("chzn-container-single-nosearch");
+          }
         }
       }
       content = '';
@@ -610,7 +636,9 @@
         }
       }
       this.search_field_disabled();
-      this.show_search_field_default();
+      if (!this.options.autocomplete_path) {
+        this.show_search_field_default();
+      }
       this.search_field_scale();
       this.search_results.html(content);
       return this.parsing = false;
@@ -648,6 +676,27 @@
     };
 
     Chosen.prototype.results_show = function() {
+      var container;
+      if (this.options.autocomplete_path) {
+        if (this.autocomplete_timer != null) {
+          clearTimeout(this.autocomplete_timer);
+        }
+        container = this;
+        return this.autocomplete_timer = setTimeout(function() {
+          if (container.search_field.val().length > 0) {
+            return container.results_show_now();
+          }
+        }, 1000);
+      } else {
+        return this.results_show_now();
+      }
+    };
+
+    Chosen.prototype.results_show_now = function() {
+      if (this.options.autocomplete_path && this.search_field.val().length === 0) {
+        this.results_hide();
+        return;
+      }
       if (this.is_multiple && this.max_selected_options <= this.choices_count()) {
         this.form_field_jq.trigger("liszt:maxselected", {
           chosen: this
@@ -797,7 +846,7 @@
     };
 
     Chosen.prototype.result_select = function(evt) {
-      var high, high_id, item, position;
+      var high, high_id, item, option, position;
       if (this.result_highlight) {
         high = this.result_highlight;
         high_id = high.attr("id");
@@ -819,7 +868,15 @@
         position = high_id.substr(high_id.lastIndexOf("_") + 1);
         item = this.results_data[position];
         item.selected = true;
-        this.form_field.options[item.options_index].selected = true;
+        option = $(this.form_field).find('option[value="' + item.value + '"]');
+        if (this.options.autocomplete_path && option.length === 0) {
+          $(this.form_field).append('<option value="' + item.value + '" selected="selected">' + item.text + '</option>');
+        } else if (option.selected() != null) {
+          this.results_hide();
+          return;
+        } else {
+          option.attr('selected', 'selected');
+        }
         this.selected_option_count = null;
         if (this.is_multiple) {
           this.choice_build(item);
@@ -835,7 +892,7 @@
         this.search_field.val("");
         if (this.is_multiple || this.form_field.selectedIndex !== this.current_selectedIndex) {
           this.form_field_jq.trigger("change", {
-            'selected': this.form_field.options[item.options_index].value
+            'selected': this.options.autocomplete_path ? item.value : this.form_field.options[item.options_index].value
           });
         }
         this.current_selectedIndex = this.form_field.selectedIndex;
@@ -889,6 +946,32 @@
     };
 
     Chosen.prototype.winnow_results = function() {
+      if (this.options.autocomplete_path) {
+        return this.winnow_results_remote();
+      } else {
+        return this.winnow_results_local();
+      }
+    };
+
+    Chosen.prototype.winnow_results_remote = function() {
+      var container;
+      this.search_results.html('Loading...');
+      container = this;
+      return $.ajax({
+        url: this.options.autocomplete_path,
+        type: 'POST',
+        data: {
+          search: this.search_field.val()
+        },
+        success: function(data) {
+          container.results_data = root.SelectParser.ajax_results_to_array(data.results);
+          container.results_update_field();
+          return container.winnow_results_local();
+        }
+      });
+    };
+
+    Chosen.prototype.winnow_results_local = function() {
       var found, option, part, parts, regex, regexAnchor, result, result_id, results, searchText, startpos, text, zregex, _i, _j, _len, _len1, _ref1;
       this.no_results_clear();
       results = 0;
