@@ -382,7 +382,7 @@ class Chosen extends AbstractChosen
       if @options.autocomplete_path && option.length == 0
         $(this.form_field).append('<option value="' + item.value + '" selected="selected">' + item.text + '</option>')
 
-      else if option.selected()?
+      else if !option.selected()?
         @results_hide()
         return
 
