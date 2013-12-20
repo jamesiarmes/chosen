@@ -871,7 +871,7 @@
         option = $(this.form_field).find('option[value="' + item.value + '"]');
         if (this.options.autocomplete_path && option.length === 0) {
           $(this.form_field).append('<option value="' + item.value + '" selected="selected">' + item.text + '</option>');
-        } else if (option.selected() != null) {
+        } else if (option.selected() == null) {
           this.results_hide();
           return;
         } else {
