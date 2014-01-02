@@ -275,22 +275,20 @@ $chosen-sprite-retina: image-url('chosen-sprite@2x.png');
 /* @end */
 
 /* @group Active  */
-.chosen-container-active{
+.chosen-choices-active {
   .chosen-single {
     border: 1px solid #5897fb;
     box-shadow: 0 0 5px rgba(#000,.3);
   }
-  &.chosen-with-drop{
-    .chosen-single {
-      border: 1px solid #aaa;
-      -moz-border-radius-bottomright: 0;
-      border-bottom-right-radius: 0;
-      -moz-border-radius-bottomleft: 0;
-      border-bottom-left-radius: 0;
-      @include background-image(linear-gradient(#eee 20%, #fff 80%));
-      box-shadow: 0 1px 0 #fff inset;
-    }
-    .chosen-single div {
+  &.chosen-single {
+    border: 1px solid #aaa;
+    -moz-border-radius-bottomright: 0;
+    border-bottom-right-radius: 0;
+    -moz-border-radius-bottomleft: 0;
+    border-bottom-left-radius: 0;
+    @include background-image(linear-gradient(#eee 20%, #fff 80%));
+    box-shadow: 0 1px 0 #fff inset;
+    div {
       border-left: none;
       background: transparent;
       b {
@@ -370,7 +368,7 @@ $chosen-sprite-retina: image-url('chosen-sprite@2x.png');
     padding-right: 15px;
     padding-left: 0;
   }
-  &.chosen-container-active.chosen-with-drop .chosen-single div {
+  &.removeClass-active .chosen-single div {
     border-right: none;
   }
   .chosen-search input[type="text"] {
