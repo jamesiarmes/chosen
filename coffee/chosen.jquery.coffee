@@ -60,7 +60,7 @@ class Chosen extends AbstractChosen
       @search_container = @container.find('div.chosen-search').first()
       @selected_item = @container.find('.chosen-single').first()
     
-    this.results_build()
+    this.results_build(true)
     this.set_tab_index()
     this.set_label_behavior()
     
@@ -180,27 +180,29 @@ class Chosen extends AbstractChosen
     else
       this.close_field()
 
-  results_build: ->
+  results_build: (init = false) ->
     @parsing = true
     @selected_option_count = null
 
-    @results_data = SelectParser.select_to_array @form_field
+    if (!@options.autocomplete_path || init)
+      @results_data = SelectParser.select_to_array @form_field
 
-    if @is_multiple
-      @search_choices.find("li.search-choice").remove()
-    else if not @is_multiple
-      this.single_set_selected_text()
-      if @disable_search or @form_field.options.length <= @disable_search_threshold
-        @search_field[0].readOnly = true
-        @container.addClass "chosen-container-single-nosearch"
-      else
-        @search_field[0].readOnly = false
-        @container.removeClass "chosen-container-single-nosearch"
+      if @is_multiple
+        @search_choices.find("li.search-choice").remove()
+      else if not @is_multiple
+        this.single_set_selected_text()
+        if @disable_search or @form_field.options.length <= @disable_search_threshold
+          @search_field[0].readOnly = true
+          @container.addClass "chosen-container-single-nosearch"
+        else
+          @search_field[0].readOnly = false
+          @container.removeClass "chosen-container-single-nosearch"
 
     this.update_results_content this.results_option_build({first:true})
 
     this.search_field_disabled()
-    this.show_search_field_default()
+    if !@options.autocomplete_path
+      this.show_search_field_default()
     this.search_field_scale()
 
     @parsing = false
@@ -229,6 +231,24 @@ class Chosen extends AbstractChosen
     @result_highlight = null
 
   results_show: ->
+    if @options.autocomplete_path
+      if @autocomplete_timer?
+        clearTimeout(@autocomplete_timer)
+      container = @
+      @autocomplete_timer = setTimeout(
+        () ->
+          if container.search_field.val().length > 0
+           container.results_show_now()
+        1000
+      )
+    else
+      @results_show_now();
+
+  results_show_now: ->
+    if (@options.autocomplete_path && @search_field.val().length == 0)
+      @results_hide();
+      return;
+      
     if @is_multiple and @max_selected_options <= this.choices_count()
       @form_field_jq.trigger("chosen:maxselected", {chosen: this})
       return false
@@ -356,8 +376,18 @@ class Chosen extends AbstractChosen
 
       item = @results_data[ high[0].getAttribute("data-option-array-index") ]
       item.selected = true
+      option = $(@form_field).find('option[value="' + item.value + '"]')
 
-      @form_field.options[item.options_index].selected = true
+      if @options.autocomplete_path && option.length == 0
+        $(this.form_field).append('<option value="' + item.value + '" selected="selected">' + item.text + '</option>')
+
+      else if option.selected()?
+        @results_hide()
+        return
+
+      else
+        option.attr('selected', 'selected')
+
       @selected_option_count = null
 
       if @is_multiple
@@ -369,7 +399,7 @@ class Chosen extends AbstractChosen
 
       @search_field.val ""
 
-      @form_field_jq.trigger "change", {'selected': @form_field.options[item.options_index].value} if @is_multiple || @form_field.selectedIndex != @current_selectedIndex
+      @form_field_jq.trigger "change", {'selected': if @options.autocomplete_path then item.value else @form_field.options[item.options_index].value} if @is_multiple || @form_field.selectedIndex != @current_selectedIndex
       @current_selectedIndex = @form_field.selectedIndex
       this.search_field_scale()
 

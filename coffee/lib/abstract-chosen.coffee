@@ -115,6 +115,25 @@ class AbstractChosen
       this.results_show()
 
   winnow_results: ->
+    if @.options.autocomplete_path
+      this.winnow_results_remote()
+    else
+      this.winnow_results_local()
+
+  winnow_results_remote: ->
+    @search_results.html('Loading...');
+    container = @
+    $.ajax({
+      url : this.options.autocomplete_path,
+      type : 'POST',
+      data : { search : @search_field.val() },
+      success : (data) ->
+        container.results_data = SelectParser.ajax_results_to_array(data.results)
+        container.results_update_field()
+        container.winnow_results_local()
+    })
+
+  winnow_results_local: ->
     this.no_results_clear()
 
     results = 0

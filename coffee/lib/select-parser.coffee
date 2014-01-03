@@ -62,3 +62,18 @@ SelectParser.select_to_array = (select) ->
   parser = new SelectParser()
   parser.add_node( child ) for child in select.childNodes
   parser.parsed
+
+SelectParser.ajax_results_to_array = (select) ->
+  parser = new SelectParser()
+  for child in select
+    node =
+      nodeName : "OPTION"
+      value : child.id
+      text : child.text
+      innerHTML : child.text
+      selected : false
+      className : ''
+      style :
+        cssText: ''
+    parser.add_node node, null, false
+  parser.parsed
