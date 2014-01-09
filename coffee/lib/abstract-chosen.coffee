@@ -27,6 +27,7 @@ class AbstractChosen
     @search_contains = @options.search_contains || false
     @single_backstroke_delete = if @options.single_backstroke_delete? then @options.single_backstroke_delete else true
     @max_selected_options = @options.max_selected_options || Infinity
+    @autocomplete_cache = {}
     @inherit_select_classes = @options.inherit_select_classes || false
     @display_selected_options = if @options.display_selected_options? then @options.display_selected_options else true
     @display_disabled_options = if @options.display_disabled_options? then @options.display_disabled_options else true
@@ -121,17 +122,32 @@ class AbstractChosen
       this.winnow_results_local()
 
   winnow_results_remote: ->
-    @search_results.html('Loading...');
-    container = @
-    $.ajax({
-      url : this.options.autocomplete_path,
-      type : 'POST',
-      data : { search : @search_field.val() },
-      success : (data) ->
-        container.results_data = SelectParser.ajax_results_to_array(data.results)
-        container.results_update_field()
-        container.winnow_results_local()
-    })
+    search_text = @search_field.val()
+    if (@autocomplete_cache.hasOwnProperty(search_text))
+      @winnow_results_remote_complete(this.autocomplete_cache[search_text])
+    else
+      @update_results_content('Loading...');
+      @results_show_container
+      if (@autocomplete_timer?)
+        clearTimeout(@autocomplete_timer)
+
+      container = @
+      @autocomplete_timer = setTimeout(
+        () ->
+          $.ajax({
+            url : container.options.autocomplete_path,
+            type : 'POST',
+            data : { search : search_text },
+            success : (data) ->
+              container.autocomplete_cache[search_text] = data.results;
+              container.winnow_results_remote_complete(data.results);
+          })
+        1000
+      )
+
+  winnow_results_remote_complete: (results) ->
+    @results_data = SelectParser.ajax_results_to_array(results)
+    @winnow_results_local()
 
   winnow_results_local: ->
     this.no_results_clear()
