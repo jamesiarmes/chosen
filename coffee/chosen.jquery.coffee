@@ -231,20 +231,6 @@ class Chosen extends AbstractChosen
     @result_highlight = null
 
   results_show: ->
-    if @options.autocomplete_path
-      if @autocomplete_timer?
-        clearTimeout(@autocomplete_timer)
-      container = @
-      @autocomplete_timer = setTimeout(
-        () ->
-          if container.search_field.val().length > 0
-           container.results_show_now()
-        1000
-      )
-    else
-      @results_show_now();
-
-  results_show_now: ->
     if (@options.autocomplete_path && @search_field.val().length == 0)
       @results_hide();
       return;
@@ -253,15 +239,18 @@ class Chosen extends AbstractChosen
       @form_field_jq.trigger("chosen:maxselected", {chosen: this})
       return false
 
-    @container.find('.chosen-drop').css('left', 0)
-    @form_field_jq.trigger("chosen:showing_dropdown", {chosen: this})
-
-    @results_showing = true
+    @results_show_container
 
     @search_field.focus()
     @search_field.val @search_field.val()
 
     this.winnow_results()
+
+  results_show_container: ->
+    @container.find('.chosen-drop').css('left', 0)
+    @form_field_jq.trigger("chosen:showing_dropdown", {chosen: this})
+
+    @results_showing = true
 
   update_results_content: (content) ->
     @search_results.html content
