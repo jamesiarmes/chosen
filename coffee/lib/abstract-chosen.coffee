@@ -126,8 +126,8 @@ class AbstractChosen
     if (@autocomplete_cache.hasOwnProperty(search_text))
       @winnow_results_remote_complete(this.autocomplete_cache[search_text])
     else
-      @update_results_content('Loading...');
-      @results_show_container
+      @update_results_content('Loading...')
+      @results_show_container()
       if (@autocomplete_timer?)
         clearTimeout(@autocomplete_timer)
 

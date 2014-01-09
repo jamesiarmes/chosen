@@ -239,7 +239,7 @@ class Chosen extends AbstractChosen
       @form_field_jq.trigger("chosen:maxselected", {chosen: this})
       return false
 
-    @results_show_container
+    @results_show_container()
 
     @search_field.focus()
     @search_field.val @search_field.val()
